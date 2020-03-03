@@ -5,12 +5,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/alec-rabold/zipspy/pkg/aws"
-	"github.com/alec-rabold/zipspy/pkg/reader"
 	"io"
 	"io/ioutil"
+	"math"
 	"strings"
 
+	"github.com/alec-rabold/zipspy/pkg/aws"
+	"github.com/alec-rabold/zipspy/pkg/reader"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,12 +23,18 @@ type FileExtractor struct {
 	key    string
 	size   int64
 	reader.DirectoryEnd
+	fileMap map[string][]*File
+}
+
+// ExtractFilesOutput is the response objection from calling Extract()
+type ExtractFilesOutput struct {
+	FileMap map[string][]*File
 }
 
 // File represents a decompressed, extracted file
 type File struct {
 	reader.FileHeader
-	contents bytes.Buffer
+	Contents bytes.Buffer
 }
 
 // NewFileExtractor creates a new instance of FileExtractor
@@ -46,23 +53,29 @@ func NewFileExtractor(bucket, key string) *FileExtractor {
 func (x *FileExtractor) init() {
 	head := x.aws.GetHeadObject(x.ctx, x.bucket, x.key)
 	x.size = *head.ContentLength
+	x.fileMap = make(map[string][]*File)
 }
 
 // ExtractFiles retrieves the desired files from S3 (compressed), then
 // returns a slice a decompressed File objevts
-func (x *FileExtractor) ExtractFiles(files []string) ([]*File, error) {
+func (x *FileExtractor) ExtractFiles(files []string) (*ExtractFilesOutput, error) {
 	dir, err := x.getEOCDRecord()
 	if err != nil {
 		return nil, err
 	}
+
 	x.DirectoryEnd = dir
 	zFiles, err := x.getLocalDirectoryFiles()
 	if err != nil {
 		return nil, err
 	}
 
-	x.extractAndDecompressFiles(zFiles, files)
-	return nil, nil
+	_, err = x.extractAndDecompressFiles(zFiles, files)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ExtractFilesOutput{x.fileMap}, nil
 }
 
 // EOCDR stands for End of Central Directory\
@@ -127,9 +140,10 @@ func (x *FileExtractor) getLocalDirectoryFiles() ([]*reader.File, error) {
 func (x *FileExtractor) extractAndDecompressFiles(zFiles []*reader.File, filesToExtract []string) ([]*File, error) {
 	var files []*File
 	for _, file := range zFiles {
-		if contains(filesToExtract, file.Name) {
+		if str := contains(filesToExtract, file.Name); str != nil {
 			// Get S3 object w/ range, then decode
-			byteRange := fmt.Sprintf("bytes=%v-%v", file.HeaderOffset, file.HeaderOffset+int64(file.CompressedSize64)+100)
+			rangeEnd := int64(math.Min(float64(file.HeaderOffset+int64(file.CompressedSize64)+200), float64(x.size)))
+			byteRange := fmt.Sprintf("bytes=%v-%v", file.HeaderOffset, rangeEnd)
 			response := x.aws.GetS3ObjectWithRange(x.ctx, x.bucket, x.key, byteRange)
 			bodyBytes, err := ioutil.ReadAll(response.Body)
 			if err != nil {
@@ -149,22 +163,26 @@ func (x *FileExtractor) extractAndDecompressFiles(zFiles []*reader.File, filesTo
 			}
 			rc.Close()
 
-			files = append(files, &File{
-				FileHeader: file.FileHeader,
-				contents:   buf,
-			})
+			if _, ok := x.fileMap[*str]; !ok {
+				x.fileMap[*str] = make([]*File, 0)
+			}
 
-			fmt.Println(buf.String())
+			x.fileMap[*str] = append(x.fileMap[*str], &File{
+				FileHeader: file.FileHeader,
+				Contents:   buf,
+			})
 		}
 	}
 	return files, nil
 }
 
-func contains(s []string, e string) bool {
+// checks if a string (e) contains any substrings of those in a slice (s)
+// returns the matched string from slice (s)[n]
+func contains(s []string, e string) *string {
 	for _, a := range s {
 		if strings.Contains(e, a) {
-			return true
+			return &a
 		}
 	}
-	return false
+	return nil
 }
