@@ -20,13 +20,15 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "zipspy",
 	Short: "CLI tool to extract files from zip archives in S3 without needing to download the entire archive",
-	Long: `The zipspy CLI allows you to download specific files and/or directories from zip archives 
-	in S3 without having to download the entire object.. 
+	Long: `
+The zipspy CLI allows you to download specific files and/or directories from zip archives 
+in S3 without having to download the entire object.. 
 	
-	example:
+example:
 
-		zipspy extract -b myBucket -k myKey -f plan.txt
-		zipspy extract -b myBucket -k myKey -f plan1.txt, plan2.txt, path/to/plan3.txt, /directory`,
+zipspy extract -b myBucket -k myKey -f plan.txt
+zipspy extract -b myBucket -k myKey -f plan.txt -o my-plan.txt
+zipspy extract -b myBucket -k myKey -f plan1.txt, plan2.txt, path/to/plan3.txt, /directory`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

@@ -5,6 +5,7 @@ zipspy is a CLI tool to extract files from zip archives in S3 without needing to
 
 - [Zipspy CLI](#zipspy)
     - [Preamble](#preamble)
+    - [Installation](#installation)
     - [Sample Flow](#sample-flow)
     
 
@@ -16,6 +17,19 @@ zipspy is a CLI tool to extract files from zip archives in S3 without needing to
 
 The zipspy CLI allows you to download specific files and/or directories from zip archives in S3 without having to download the entire object. 
 
+## Installation
+
+To install zipspy, run the following command:
+
+```
+go get github.com/alec-rabold/zipspy
+```
+
+Check that it's installed correctly bur running:
+
+```
+zipspy version
+```
 
 ## Sample Flow
 
@@ -24,10 +38,10 @@ Be sure to set your AWS environment variables before using zipspy:
 `export AWS_PROFILE={profile}`  
 `export AWS_DEFAULT_REGION={region}`
 
-The following is an example of how to use the CLI, downloading a file called `plan.txt` from an S3 zip archive called `archive.zip` in a bucket named `zipspy-extractor-test`. By default, the result is printed to stdout.
+The following is an example of how to use the CLI, downloading a file called `plan.txt` from an S3 zip archive called `archive.zip` in a bucket named `zipspy-test`. By default, the result is printed to stdout.
 
 ```
-zipspy extract -b zipspy-extractor-test -k archive.zip -f plan.txt
+zipspy extract -b zipspy-test -k archive.zip -f plan.txt
 ```
 
 You can specify multiple files and/or files paths. Zipspy will download all files whose filepaths contain the given input string. For example:
@@ -46,7 +60,7 @@ With an `archive.zip` that has the following structure:
 ```
 
 
-`zipspy extract -b zipspy-extractor-test -k archive.zip -f foldername2 -f plan.txt` will download the following files:
+`zipspy extract -b zipspy-test -k archive.zip -f foldername2 -f plan.txt` will download the following files:
 
 `archive/foldername1/plan.txt`  
 `archive/foldername2/plan.txt`  
@@ -58,11 +72,11 @@ You may also specify output paths to write the file content to. By default, down
 The following example demonstrates how to download a file named `plan.txt` and save it to `data/my-plan.txt`.
 
 ```
-zipspy extract -b zipspy-extractor-test -k archive.zip -f plan.txt -o data/my-plan.txt
+zipspy extract -b zipspy-test -k archive.zip -f plan.txt -o data/my-plan.txt
 ```
 
 You may specify any number of output files as long as there is an equal number of files to download.
 
 ```
-zipspy extract -b zipspy-extractor-test -k archive.zip -f plan.txt -o data/my-plan.txt -f file.md -o data/file.md
+zipspy extract -b zipspy-test -k archive.zip -f plan.txt -o data/my-plan.txt -f file.md -o data/file.md
 ```
