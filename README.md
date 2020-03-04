@@ -15,7 +15,7 @@ zipspy is a CLI tool to extract files from zip archives in S3 without needing to
 
 ## Preamble
 
-The zipspy CLI allows you to download specific files and/or directories from zip archives in S3 without having to download the entire object. 
+The zipspy CLI allows you to download specific files and directories from a zip archive in S3 without having to download the entire object. 
 
 ## Installation
 
@@ -25,7 +25,7 @@ To install zipspy, run the following command:
 go get github.com/alec-rabold/zipspy
 ```
 
-Check that it's installed correctly bur running:
+Check that it's installed correctly by running:
 
 ```
 zipspy version
@@ -49,22 +49,25 @@ You can specify multiple files and/or files paths. Zipspy will download all file
 With an `archive.zip` that has the following structure:
 
 ```
-.
+archive/
 ├── plan.txt
-├── foldername1
-|   ├── plan.txt
-|   └── technology.md
-├── foldername2
-|   ├── plan.txt
-|   └── header.html
+├── foldername1/
+    ├── plan.txt
+    └── technology.md
+├── foldername2/
+    ├── plan.txt
+    └── header.html
 ```
 
 
 `zipspy extract -b zipspy-test -k archive.zip -f foldername2 -f plan.txt` will download the following files:
 
+`archive/plan.txt`
 `archive/foldername1/plan.txt`  
 `archive/foldername2/plan.txt`  
 `archive/foldername2/header.html`  
+
+`zipspy extract -b zipspy-test -k archive.zip -f foldername2/plan.txt` will only download `archive/foldername2/plan.txt` 
 
 
 You may also specify output paths to write the file content to. By default, downloaded data will be appended to the specified file(s). If they don't exist, zipspy will create them.
