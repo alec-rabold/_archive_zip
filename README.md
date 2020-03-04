@@ -62,12 +62,14 @@ archive/
 
 `zipspy extract -b zipspy-test -k archive.zip -f foldername2 -f plan.txt` will download the following files:
 
-`archive/plan.txt`
+`archive/plan.txt`  
 `archive/foldername1/plan.txt`  
 `archive/foldername2/plan.txt`  
 `archive/foldername2/header.html`  
 
-`zipspy extract -b zipspy-test -k archive.zip -f foldername2/plan.txt` will only download `archive/foldername2/plan.txt` 
+`zipspy extract -b zipspy-test -k archive.zip -f foldername2/plan.txt` will only download:
+
+`archive/foldername2/plan.txt`  
 
 
 You may also specify output paths to write the file content to. By default, downloaded data will be appended to the specified file(s). If they don't exist, zipspy will create them.
